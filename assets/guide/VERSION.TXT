@@ -1,0 +1,10 @@
+PicoBluetoothJoystic Autofire + Read-Only Guide candidate
+Source base: e66a304 plus English documentation publication update
+Build capability ID: dual-xinput-autofire-msc-v1
+Board: Raspberry Pi Pico W / RP2040 / CYW43439
+USB: two fixed XUSB/XInput-compatible gamepad interfaces + read-only MSC guide
+Bluetooth: Xbox Series 1914 BLE HOGP + 8BitDo Ultimate 2C Classic HID
+Guide volume: PICO_GUIDE, synthetic FAT12, immutable firmware content
+Autofire settings: per controller, RAM only, cleared on Pico restart
+The feature set was physically validated by the user before this documentation rebuild.
+This rebuilt UF2 requires a regression check because embedded guide bytes changed.

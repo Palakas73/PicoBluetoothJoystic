@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PicoBluetoothJoystic Offline Manual</title>
+<style>
+body{font:16px/1.45 system-ui,Segoe UI,sans-serif;max-width:980px;margin:24px auto;padding:0 18px;color:#172033;background:#fff}
+h1,h2{color:#092b55}h1{border-bottom:4px solid #ff6500;padding-bottom:8px}table{border-collapse:collapse;width:100%;margin:12px 0 22px}th,td{border:1px solid #aab5c3;padding:8px;text-align:left}th{background:#eaf2fb}.note{border-left:5px solid #ff6500;background:#fff5eb;padding:10px 14px}.ok{border-left:5px solid #14833b;background:#eefaf1;padding:10px 14px}img{max-width:100%;height:auto;border:1px solid #ccd3dc}code{background:#eef1f4;padding:2px 4px}small{color:#536170}
+</style></head><body>
+<h1>PicoBluetoothJoystic</h1>
+<p>Offline guide for the dual-controller XInput bridge with per-controller Autofire. This manual is stored in the firmware and is available without an internet connection.</p>
+<p><img src="AUTOFIRE.PNG" alt="Illustrated setup buttons: View and Menu on Xbox Series, Minus and Plus on 8BitDo Ultimate 2C"></p>
+<p><small>The image is an English setup illustration. It identifies the controls used by this firmware and is not presented as an exact photograph of every hardware revision.</small></p>
+
+<h2>Supported configuration</h2>
+<table><tr><th>Controller</th><th>Bluetooth transport</th><th>PC output</th></tr>
+<tr><td>Microsoft Xbox Series 1914</td><td>BLE HOGP</td><td>One XInput slot</td></tr>
+<tr><td>8BitDo Ultimate 2C Bluetooth, Nintendo Switch mode</td><td>Classic HID</td><td>One XInput slot</td></tr></table>
+<p>The Pico can use these two controllers simultaneously. Two Xbox controllers, two 8BitDo controllers and additional models are outside the validated scope. The USB protocol targets Windows XInput; it does not make the Pico compatible with an Xbox console.</p>
+
+<h2>Pairing, reconnecting and player slots</h2>
+<p>Pair each controller once. Controller identities and Bluetooth keys are persistent. Player numbers are session state: the first active controller with a valid controls report receives the lowest free logical slot. A disconnect immediately neutralizes and releases only that slot. A controller that remains connected is never moved. A reconnect receives the lowest slot free at that moment.</p>
+<p class="note">The two USB gamepad interfaces remain enumerated even when neutral. A Pico logical slot is not necessarily Windows XInput index 0 or 1 because Windows assigns global indices across all installed controllers.</p>
+
+<h2>Entering Autofire setup</h2>
+<ol><li>Xbox: hold <b>View + Menu</b> for 2 seconds. 8BitDo: hold <b>Minus + Plus</b> for 2 seconds.</li>
+<li>Wait for three fast flashes from the Pico LED.</li><li>Release both setup buttons.</li><li>Select exactly one target as described below.</li></ol>
+<p>The setup combo is recognized without delaying normal button input. Its first two seconds can reach the game, so pause the game before configuring. After recognition, setup controls are suppressed until released.</p>
+
+<h2>Targets and speed</h2>
+<p>Eligible targets are A, B, X, Y, LB/RB (L/R), LT/RT (ZL/ZR), L3 and R3. View/Menu, Minus/Plus, Guide/Home, Share/Capture, D-pad directions and analog stick movement cannot be Autofire targets.</p>
+<table><tr><th>Selection</th><th>Result</th><th>Pico feedback</th></tr>
+<tr><td>Target only, currently off</td><td>Enable at 10 presses/s</td><td>2 short flashes</td></tr>
+<tr><td>Target only, currently configured</td><td>Disable</td><td>1 long flash</td></tr>
+<tr><td>D-pad Up + target</td><td>Enable/update to 5 presses/s</td><td>1 flash</td></tr>
+<tr><td>D-pad Right + target</td><td>Enable/update to 10 presses/s</td><td>2 flashes</td></tr>
+<tr><td>D-pad Down + target</td><td>Enable/update to 15 presses/s</td><td>3 flashes</td></tr>
+<tr><td>D-pad Left + target</td><td>Enable/update to 20 presses/s</td><td>4 flashes</td></tr></table>
+<p>Diagonal D-pad input and multiple targets are rejected. Release them and try again. A selection is consumed until release and does not enter the game. Repeat the setup sequence to configure another target. Setup cancels after 10 seconds, on disconnect, or after holding the setup combo again for 2 seconds; cancellation gives four quick flashes.</p>
+
+<h2>Runtime behaviour</h2>
+<p>Autofire only runs while its physical target is held. Every new press begins ON immediately, then alternates ON/OFF with a 50% duty cycle. Releasing stops immediately. Analog triggers activate at 50% and release below 45%; when Autofire is disabled their original analog value is preserved. The 8BitDo Switch-mode triggers are digital.</p>
+<p>Each controller has independent assignments, timing phases and setup state. One controller can be configured while the other continues playing. Assignments remain in RAM through a reconnect of that controller and are erased when the Pico restarts. Bluetooth bonds are unaffected.</p>
+
+<h2>8BitDo physical mapping</h2>
+<table><tr><th>8BitDo / Switch marking</th><th>Xbox output</th></tr><tr><td>B, bottom</td><td>A</td></tr><tr><td>A, right</td><td>B</td></tr><tr><td>Y, left</td><td>X</td></tr><tr><td>X, top</td><td>Y</td></tr><tr><td>Minus / Plus</td><td>View / Menu</td></tr><tr><td>L / R</td><td>LB / RB</td></tr><tr><td>ZL / ZR</td><td>LT / RT, digital</td></tr></table>
+<p>L4/R4 are not exposed as independent controls in the observed Bluetooth reports. If configured inside the controller to copy another control, they behave as that copied control. Capture, advanced vibration, macros and stored profiles are not implemented.</p>
+
+<h2>LEDs</h2>
+<p>The Pico LED arbitrates critical errors, queued Autofire feedback and normal connection state in that priority order. Feedback is non-blocking. Because it is shared, it does not identify which controller caused a flash. The 8BitDo player indicators are separate and follow its current logical slot when accepted by its Switch-compatible firmware.</p>
+
+<h2>Read-only guide drive</h2>
+<p><code>PICO_GUIDE</code> is a static FAT12 documentation volume generated from immutable firmware content. It advertises write protection and rejects writes, metadata changes, deletion, renaming and formatting. It contains no firmware image, Bluetooth key or TLV storage. Ejecting it does not restart the gamepads.</p>
+<p class="ok">You may open and copy README.TXT, MANUAL.HTM, AUTOFIRE.PNG and VERSION.TXT. Creating or editing a file must fail with a write-protection error.</p>
+
+<h2>Diagnostics and BOOTSEL recovery</h2>
+<p>The final XInput build has no USB serial port. Use the supplied Windows XInput polling tool for controller state. For recovery, unplug Pico, hold BOOTSEL while reconnecting, and copy the selected UF2 to the separate <code>RPI-RP2</code> volume. <code>PICO_GUIDE</code> is not BOOTSEL. Do not format either volume.</p>
+</body></html>
