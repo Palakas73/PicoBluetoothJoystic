@@ -90,7 +90,8 @@ Sony DualShock 4 (PS4): hold SHARE + OPTIONS for 2 seconds.
 For the DS4, SHARE + PS is only for first-time Bluetooth pairing; it does not
 open AUTOFIRE setup. The Pico LED flashes three times when setup is armed.
 Release both setup buttons before selecting a target. The illustration above
-shows the setup buttons on all three controller types.
+shows all four controller types. The 8BitDo Ultimate 2C and Nintendo Switch
+Pro use the same Minus (-) + Plus (+) setup combo.
 
 Press one target without the D-pad:
   Not configured -> enable at 10 presses/second (two short flashes)

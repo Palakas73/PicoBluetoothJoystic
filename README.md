@@ -4,7 +4,7 @@ PicoBluetoothJoystic turns a Raspberry Pi Pico W into a two-player Bluetooth-to-
 
 > This is an independent community project. It is not affiliated with, endorsed by, or certified by Microsoft, Nintendo, Raspberry Pi, or 8BitDo. It is a PC adapter, not an Xbox-console accessory.
 
-![AUTOFIRE setup buttons: Xbox Series View + Menu, 8BitDo Ultimate 2C Minus + Plus, and DualShock 4 SHARE + OPTIONS](assets/guide/AUTOFIRE.PNG)
+![AUTOFIRE setup buttons: Xbox Series View + Menu; 8BitDo Ultimate 2C and Nintendo Switch Pro Minus + Plus; DualShock 4 SHARE + OPTIONS](assets/guide/AUTOFIRE.PNG)
 
 The image is an instructional illustration, not an official product photograph.
 
