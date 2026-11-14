@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PicoBluetoothJoystic Offline Manual</title>
+<style>
+body{font:16px/1.45 system-ui,Segoe UI,sans-serif;max-width:980px;margin:24px auto;padding:0 18px;color:#172033;background:#fff}
+h1,h2{color:#092b55}h1{border-bottom:4px solid #ff6500;padding-bottom:8px}table{border-collapse:collapse;width:100%;margin:12px 0 22px}th,td{border:1px solid #aab5c3;padding:8px;text-align:left}th{background:#eaf2fb}.note{border-left:5px solid #ff6500;background:#fff5eb;padding:10px 14px}.ok{border-left:5px solid #14833b;background:#eefaf1;padding:10px 14px}img{max-width:100%;height:auto;border:1px solid #ccd3dc}code{background:#eef1f4;padding:2px 4px}small{color:#536170}
+</style></head><body>
+<h1>PicoBluetoothJoystic</h1>
+<p>Offline guide for the dual-controller XInput bridge with per-controller Autofire. This manual is stored in the firmware and is available without an internet connection.</p>
+<p><img src="AUTOFIRE.PNG" alt="AUTOFIRE setup-button illustration for Xbox Series (View and Menu), 8BitDo Ultimate 2C (Minus and Plus), and Sony DualShock 4 (SHARE and OPTIONS); hold both for two seconds, release, then press a target"></p>
+<p><small>The image is an English setup illustration. It identifies the controls used by this firmware and is not presented as an exact photograph of every hardware revision.</small></p>
+
+<h2>Supported configuration</h2>
+<table><tr><th>Controller</th><th>Bluetooth transport</th><th>PC output</th></tr>
+<tr><td>Microsoft Xbox Series 1914</td><td>BLE HOGP</td><td>One XInput slot</td></tr>
+<tr><td>8BitDo Ultimate 2C Bluetooth, Nintendo Switch mode</td><td>Bluetooth Classic HID</td><td>One XInput slot</td></tr>
+<tr><td>Nintendo Switch Pro Controller</td><td>Bluetooth Classic HID</td><td>One XInput slot (functioning alternative, per user confirmation)</td></tr>
+<tr><td>Sony DualShock 4, original revisions</td><td>Bluetooth Classic HID</td><td>One XInput slot (experimental)</td></tr></table>
+<h2>Bluetooth connection limits: which two controllers can I use?</h2>
+<p class="note"><b>Quick rule:</b> You can use up to two controllers at once: one Xbox Series 1914 over BLE, plus <b>one</b> controller over Bluetooth Classic. Choose only one Classic controller: the 8BitDo Ultimate 2C, Switch Pro, or (experimental) DualShock 4. The Pico cannot connect two Classic controllers at the same time.</p>
+<p>The Pico has two separate Bluetooth connection resources, not two interchangeable slots: one BLE/HOGP connection and one Bluetooth Classic/HID connection. Xbox Series 1914 uses BLE. The 8BitDo Ultimate 2C, Nintendo Switch Pro and DualShock 4 use Classic HID. The current Classic host supports only one active Classic controller, regardless of which model it is. The two USB XInput outputs do not add Bluetooth capacity.</p>
+<table><tr><th>Combination</th><th>Status in this stage</th><th>How to use it</th></tr>
+<tr><td>Xbox Series 1914 + 8BitDo Ultimate 2C</td><td>Previously validated configuration</td><td>Pair/connect the Xbox on BLE and the 8BitDo in Switch mode on Classic.</td></tr>
+<tr><td>Xbox Series 1914 + Nintendo Switch Pro</td><td>One BLE plus one Classic transport; this DS4 stage does not repeat the physical test</td><td>Pair the Xbox normally, then pair one Switch Pro using SYNC.</td></tr>
+<tr><td>Xbox Series 1914 + DualShock 4</td><td><b>Goal of this stage; firmware candidate, physical validation pending</b></td><td>Pair the Xbox normally, then pair one DS4 using SHARE + PS.</td></tr>
+<tr><td>8BitDo + Switch Pro</td><td>Not supported simultaneously</td><td>Both require the single Classic HID connection. Turn off/disconnect one before connecting the other.</td></tr>
+<tr><td>DS4 + 8BitDo; DS4 + Switch Pro; two DS4 controllers</td><td>Not supported simultaneously in this stage</td><td>Only one Classic controller can be active. Use one Classic controller plus the BLE Xbox, or use the Classic controller alone.</td></tr></table>
+<h3>How to choose and connect your controllers</h3>
+<ol><li>Decide which Classic controller you want to use: 8BitDo, Switch Pro, or DS4. Only one of these can be active.</li><li>If you also want a second player, use the Xbox Series 1914 as the other controller; it uses the separate BLE connection.</li><li>Pair each selected controller with the Pico once, using that controller's pairing instructions below. Do not pair it through Windows Bluetooth settings.</li><li>To change Classic controllers, turn off or disconnect the current Classic controller first, then pair or reconnect the other one. A remembered bond does not let two Classic controllers stay connected together.</li><li>The first controller that becomes ready gets the lowest free Pico player slot. If both are connected, each controls its own XInput output. The unused output stays neutral.</li></ol>
+<p>In short: connect at most <b>one BLE Xbox</b> and <b>one Classic HID controller</b> at the same time. Two USB XInput slots do not mean that two Classic Bluetooth controllers can connect. Windows XInput indexes may differ from Pico logical player numbers.</p>
+<h3>Remembered bonds, active links and USB outputs are different limits</h3>
+<table><tr><th>Resource</th><th>Capacity</th><th>Meaning</th></tr>
+<tr><td>Remembered Bluetooth Classic identities</td><td>4</td><td>Up to four Classic controllers can keep bonds for later use. Powered-off controllers still occupy remembered entries.</td></tr>
+<tr><td>Classic link-key storage</td><td>5 records</td><td>Four committed bonds plus one temporary key slot used only while a replacement is being validated. The temporary key is not a fifth remembered controller.</td></tr>
+<tr><td>Active Bluetooth Classic HID links</td><td>1</td><td>Only one 8BitDo, Switch Pro or DS4 can be connected to the Pico at a time.</td></tr>
+<tr><td>Active BLE/HOGP links</td><td>1</td><td>Reserved for the supported Xbox Series 1914 controller.</td></tr>
+<tr><td>USB XInput outputs</td><td>2 fixed slots</td><td>One output per active controller, with an unused output remaining neutral. USB slots do not create extra Bluetooth links.</td></tr></table>
+<p>When there is room among the four remembered identities, a supported new Classic controller can be paired normally. If all four entries are occupied, a name or inquiry result alone cannot replace a bond. First disconnect the active Classic controller, then flash the CDC diagnostic UF2 and connect to its COM port at 115200 baud. Send <code>BOND LIST</code> to view identities and their least-recently-used order, then send <code>BOND PAIR</code> and put the new controller into pairing mode within 60 seconds.</p>
+<p>The Pico stages the new key in the temporary fifth BTstack slot and keeps the old bond. The least recently used identity that is disconnected and not reserved by a connection/authentication operation is selected. Replacement commits only after the new device is recognized as a supported profile and produces a valid controls report (<code>INPUT_READY</code>). If pairing, identification or input validation fails, the new key is discarded and the old bond remains. The LRU order updates at <code>INPUT_READY</code>, not on every input packet. If no identity is eligible, the Pico reports that pairing cannot proceed.</p>
+<p>To intentionally remove a particular bond instead, use <code>BOND REMOVE AA:BB:CC:DD:EE:FF</code> with the exact address shown by <code>BOND LIST</code>. This removes only that Classic key and its RAM AUTOFIRE settings; the other Classic bonds and Xbox BLE bond are retained. The CDC diagnostic firmware exposes one generic HID output rather than the production dual-XInput USB layout, so turn off the Xbox during this maintenance pairing session if the diagnostic output is already occupied. After pairing, load the XInput candidate UF2 again.</p>
+<p>The USB protocol targets Windows XInput; it does not make the Pico compatible with an Xbox console.</p>
+<h2>Experimental Nintendo Switch Pro Controller</h2>
+<p>The user has confirmed the Switch Pro as a functioning alternative. For first pairing, hold the controller's SYNC button until its player LEDs chase. The firmware requests device information, selects full report mode and requires a valid <code>0x30</code> controls report before assigning a player slot. Reconnect by powering the already bonded controller on; the Classic host retries discovery and remembered links. Only one Classic controller can be connected at a time.</p>
+<h2>Experimental DualShock 4</h2>
+<p>DS4 remains an experimental profile. The user reports that its controls and AUTOFIRE work in The Occultist. Small stick movement remains visible in Windows joy.cpl; the supplied XInput capture does not contain raw Bluetooth reports, so its source is not confirmed. Xbox + DS4 simultaneous operation and the exact controller revision have not been confirmed. For first pairing, turn the controller off, then hold <b>SHARE</b> and press/hold <b>PS</b> until the light bar flashes. Keep the Pico on the DS4 diagnostic firmware and wait for its Classic discovery/authentication diagnostics; the Pico, rather than Windows' Bluetooth settings, must bond to the controller. After bonding, press PS to reconnect; do not hold SHARE during normal reconnect. Sony VID/PID families 054C:05C4 and 054C:09CC are the intended originals, but this host does not yet query the Bluetooth Device ID/PnP SDP service. The descriptor signature and report validation confirm a DS4-compatible profile, not manufacturer identity; clones are not claimed. Parser selection does not rely on the advertised name alone. If the descriptor is not recognized, the firmware reports an unconfirmed identity and does not send Nintendo initialization commands.</p>
+<p>To diagnose moving axes at rest, connect the DS4 to the CDC diagnostic firmware, wait for <code>INPUT_READY</code>, leave the controller flat and untouched, then run <code>tools\capture-dualshock4.ps1 -Port COMx -RestOnly -RestSamples 24</code>. The Pico copies up to 32 complete reports at 100 ms intervals into a bounded buffer and later prints each report with its framing, Report ID, raw axis bytes, parser result, CRC where applicable, normalized state and calculated XInput axes. Check the final omitted count. The CDC image calculates XInput values but exposes generic HID, not production XUSB; it does not auto-calibrate stick centers.</p>
+<p>The candidate reads Bluetooth input reports 0x01 (10 bytes) and 0x11 (78 bytes). The full 0x11 report has CRC32 validation. Button controls do not wait for optional feature-report 0x02; light-bar color, touchpad, motion, audio and rumble are not implemented. Cross/Circle/Square/Triangle map by physical position to Xbox A/B/X/Y. SHARE maps to View and OPTIONS to Menu; the PS button is not exposed as Guide.</p>
+
+<h2>Pairing, reconnecting and player slots</h2>
+<p>Pair each controller once. Controller identities and Bluetooth keys are persistent. Player numbers are session state: the first active controller with a valid controls report receives the lowest free logical slot. A disconnect immediately neutralizes and releases only that slot. A controller that remains connected is never moved. A reconnect receives the lowest slot free at that moment.</p>
+<p class="note">The two USB gamepad interfaces remain enumerated even when neutral. A Pico logical slot is not necessarily Windows XInput index 0 or 1 because Windows assigns global indices across all installed controllers.</p>
+
+<h2>Entering Autofire setup</h2>
+<ol><li>Xbox: hold <b>View + Menu</b> for 2 seconds. 8BitDo or Switch Pro: hold <b>Minus + Plus</b> for 2 seconds. DS4: hold <b>SHARE + OPTIONS</b> for 2 seconds.</li>
+<li>Wait for three fast flashes from the Pico LED.</li><li>Release both setup buttons.</li><li>Select exactly one target as described below.</li></ol>
+<p class="note"><b>DualShock 4:</b> use <b>SHARE + OPTIONS</b> for AUTOFIRE setup. <b>SHARE + PS</b> is the first-time Bluetooth pairing combination, not the setup command. The illustration above identifies the correct setup buttons for each supported controller type.</p>
+<p>The setup combo is recognized without delaying normal button input. Its first two seconds can reach the game, so pause the game before configuring. After recognition, setup controls are suppressed until released.</p>
+
+<h2>Targets and speed</h2>
+<p>Eligible targets are A, B, X, Y, LB/RB (L/R), LT/RT (ZL/ZR), L3 and R3. View/Menu, Minus/Plus, Guide/Home, Share/Capture, D-pad directions and analog stick movement cannot be Autofire targets.</p>
+<table><tr><th>Selection</th><th>Result</th><th>Pico feedback</th></tr>
+<tr><td>Target only, currently off</td><td>Enable at 10 presses/s</td><td>2 short flashes</td></tr>
+<tr><td>Target only, currently configured</td><td>Disable</td><td>1 long flash</td></tr>
+<tr><td>D-pad Up + target</td><td>Enable/update to 5 presses/s</td><td>1 flash</td></tr>
+<tr><td>D-pad Right + target</td><td>Enable/update to 10 presses/s</td><td>2 flashes</td></tr>
+<tr><td>D-pad Down + target</td><td>Enable/update to 15 presses/s</td><td>3 flashes</td></tr>
+<tr><td>D-pad Left + target</td><td>Enable/update to 20 presses/s</td><td>4 flashes</td></tr></table>
+<p>Diagonal D-pad input and multiple targets are rejected. Release them and try again. A selection is consumed until release and does not enter the game. Repeat the setup sequence to configure another target. Setup cancels after 10 seconds, on disconnect, or after holding the setup combo again for 2 seconds; cancellation gives four quick flashes.</p>
+
+<h2>Runtime behaviour</h2>
+<p>Autofire only runs while its physical target is held. Every new press begins ON immediately, then alternates ON/OFF with a 50% duty cycle. Releasing stops immediately. Analog triggers activate at 50% and release below 45%; when Autofire is disabled their original analog value is preserved. The 8BitDo Switch-mode triggers are digital.</p>
+<p>Each controller has independent assignments, timing phases and setup state. One controller can be configured while the other continues playing. Assignments remain in RAM through a reconnect of that controller and are erased when the Pico restarts. Bluetooth bonds are unaffected.</p>
+
+<h2>Physical button mappings</h2>
+<table><tr><th>8BitDo / Switch marking</th><th>Xbox output</th></tr><tr><td>B, bottom</td><td>A</td></tr><tr><td>A, right</td><td>B</td></tr><tr><td>Y, left</td><td>X</td></tr><tr><td>X, top</td><td>Y</td></tr><tr><td>Minus / Plus</td><td>View / Menu</td></tr><tr><td>L / R</td><td>LB / RB</td></tr><tr><td>ZL / ZR</td><td>LT / RT, digital</td></tr></table>
+<p>L4/R4 are not exposed as independent controls in the observed Bluetooth reports. If configured inside the controller to copy another control, they behave as that copied control. Capture, advanced vibration, macros and stored profiles are not implemented.</p>
+<table><tr><th>DualShock 4 physical control</th><th>Xbox output</th></tr><tr><td>Cross / Circle / Square / Triangle</td><td>A / B / X / Y</td></tr><tr><td>L1 / R1</td><td>LB / RB</td></tr><tr><td>L2 / R2</td><td>Analog LT / RT</td></tr><tr><td>SHARE / OPTIONS</td><td>View / Menu</td></tr><tr><td>L3 / R3 and D-pad</td><td>Matching controls</td></tr><tr><td>PS / touchpad click</td><td>Not mapped</td></tr></table>
+<p>For DS4, AUTOFIRE setup is SHARE + OPTIONS. Settings are attached to the controller's Bluetooth address in RAM and survive its reconnect, but are erased on Pico restart. They are not transferred to another Classic controller that reuses the same connection context.</p>
+
+<h2>LEDs</h2>
+<p>The Pico LED arbitrates critical errors, queued Autofire feedback and normal connection state in that priority order. Feedback is non-blocking. Because it is shared, it does not identify which controller caused a flash. The 8BitDo player indicators are separate and follow its current logical slot when accepted by its Switch-compatible firmware.</p>
+
+<h2>Read-only guide drive</h2>
+<p><code>PICO_GUIDE</code> is a static FAT12 documentation volume generated from immutable firmware content. It advertises write protection and rejects writes, metadata changes, deletion, renaming and formatting. It contains no firmware image, Bluetooth key or TLV storage. Ejecting it does not restart the gamepads.</p>
+<p class="ok">You may open and copy README.TXT, MANUAL.HTM, AUTOFIRE.PNG and VERSION.TXT. Creating or editing a file must fail with a write-protection error.</p>
+
+<h2>Diagnostics and BOOTSEL recovery</h2>
+<p>The final XInput build has no USB serial port. Use the supplied Windows XInput polling tool for controller state. For recovery, unplug Pico, hold BOOTSEL while reconnecting, and copy the selected UF2 to the separate <code>RPI-RP2</code> volume. <code>PICO_GUIDE</code> is not BOOTSEL. Do not format either volume.</p>
+</body></html>

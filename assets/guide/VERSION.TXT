@@ -1,0 +1,10 @@
+PicoBluetoothJoystic DualShock 4 experimental candidate
+Build capability ID: dual-xinput-autofire-msc-ds4-stage1
+Board: Raspberry Pi Pico W / RP2040 / CYW43439
+USB: two fixed XUSB/XInput-compatible gamepad interfaces + read-only MSC guide
+Bluetooth: one Xbox Series 1914 BLE HOGP + one active Classic HID (8BitDo, Switch Pro, or experimental DS4); four remembered Classic identities
+Classic key store: four committed identities + one provisional replacement key slot
+Guide volume: PICO_GUIDE, synthetic FAT12, immutable firmware content
+Autofire settings: per controller, RAM only, cleared on Pico restart
+Xbox + 8BitDo, reconnection, slots, AUTOFIRE and read-only guide behavior were physically validated by the user before this DS4 stage.
+The user reports DS4 controls and AUTOFIRE working in The Occultist. Small stick movement remains visible in joy.cpl; raw Bluetooth capture and Xbox + DS4 simultaneous validation are pending. Only one Classic HID controller can be connected at a time.
